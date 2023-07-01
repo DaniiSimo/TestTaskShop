@@ -33,6 +33,7 @@ class Basket extends Table
         $query = "CREATE TABLE IF NOT EXISTS Basket (".
             "id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,".
             "id_product INT(11) UNSIGNED NOT NULL,".
+            "UNIQUE KEY (id_product),".
             "PRIMARY KEY (id),".
             "FOREIGN KEY (id_product) REFERENCES Product(id))".
             "ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;";
@@ -44,16 +45,21 @@ class Basket extends Table
      * @param array $params Значения столбца, описывающего запись из корзины, должен иметь следующий вид:
      * [
      *  "id_product" => {Значение идентификатора товара, добавляемого в корзину} int]
-     * @return bool|PDOException Если, запись корзины успешно добавлена, возвращает true, иначе ошибку
+     * @return array|PDOException Если, запись корзины успешно добавлена, возвращается массив с добавленной записью в корзину, обращаться к нему по полю added_record_basket, иначе ошибку
      */
-    public function addRecord(array $params): bool|PDOException
+    public function addRecord(array $params): array|PDOException
     {
         $query = "INSERT INTO $this->name SET id_product = :id_product";
         $state = $this->connection->prepare(query: $query);
         try {
             $state->bindValue(param: "id_product",value: $params["id_product"],type: PDO::PARAM_INT);
             $state->execute();
-            return true;
+            return [
+                "added_record_basket" => [
+                    "id" => $this->connection->lastInsertId(),
+                    "id_product" => $params["id_product"]
+                ]
+            ];
         }
         catch(PDOException $ex){
             return $ex;
@@ -66,9 +72,9 @@ class Basket extends Table
      * @param array $params Значения столбца, описывающего запись из корзины, должен иметь следующий вид:
      * [
      *  "id_product" => {Редактируемое значение идентификатора товара, который находится в корзине} int]
-     * @return bool|PDOException Если, запись корзины успешно редактирована, возвращает true, иначе ошибку
+     * @return array|PDOException Если, запись корзины успешно редактирована, возвращается массив с редактированной записью корзины, обращаться к нему по полю edited_record_basket иначе ошибку
      */
-    public function editRecord(int $id, array $params): bool|PDOException
+    public function editRecord(int $id, array $params): array|PDOException
     {
         $query = "UPDATE $this->name SET id_product = :id_product WHERE `id` = :id";
         $state = $this->connection->prepare(query: $query);
@@ -76,7 +82,15 @@ class Basket extends Table
             $state->bindValue(param: "id_product",value: $params["id_product"],type: PDO::PARAM_INT);
             $state->bindValue(param: "id",value: $id,type: PDO::PARAM_INT);
             $state->execute();
-            return true;
+            if($state->rowCount() == 0){
+                throw new PDOException(message: "There is no entry in the bucket with this id");
+            }
+            return [
+                "edited_record_basket" => [
+                    "id" => $id,
+                    "id_product" => $params["id_product"]
+                ]
+            ];
         }
         catch(PDOException $ex){
             return $ex;
@@ -86,16 +100,23 @@ class Basket extends Table
      * Удаление записи из корзины
      *
      * @param int $id Идентификатор, удаляемой записи корзины
-     * @return bool|PDOException Если, запись корзины успешно удалена, возвращает true, иначе ошибку
+     * @return array|PDOException Если, запись корзины успешно удалена, возвращается массив с удалённой записью корзины, обращаться к нему по полю deleted_record_basket, иначе ошибку
      */
-    public function deleteRecord(int $id): bool|PDOException
+    public function deleteRecord(int $id): array|PDOException
     {
         $query = "DELETE FROM $this->name WHERE id=:id";
         $state = $this->connection->prepare(query: $query);
         try {
             $state->bindValue(param: "id",value: $id,type: PDO::PARAM_INT);
             $state->execute();
-            return true;
+            if($state->rowCount() == 0){
+                throw new PDOException(message: "There is no entry in the bucket with this id");
+            };
+            return [
+                "deleted_record_basket" => [
+                    "id" => $id,
+                ]
+            ];
         }
         catch(PDOException $ex){
             return $ex;
@@ -104,7 +125,7 @@ class Basket extends Table
     /**
      * Получение всех записей корзины из базы данных
      *
-     * @return array|PDOException Если, получение произошло успешно, возвращает массив всех записей корзины, иначе ошибку
+     * @return array|PDOException Если, получение произошло успешно, возвращает массив всех записей корзины, если записей нет возвращается пустой массив, иначе ошибку
      */
     public function getAllRecords(): array|PDOException
     {
@@ -119,13 +140,16 @@ class Basket extends Table
     /**
      * Получение записи корзины из базы данных
      *
-     * @return array|PDOException Если, получение произошло успешно, возвращает запись корзины, иначе ошибку
+     * @return array|PDOException|bool Если, получение произошло успешно, возвращает запись корзины, если записи не существует, возвращается false, иначе ошибку
      */
-    public function getRecord(int $id): array|PDOException
+    public function getRecordById(int $id): array|PDOException|bool
     {
-        $query = "SELECT * FROM $this->name WHERE id=$id";
+        $query = "SELECT * FROM $this->name WHERE id=:id";
+        $state = $this->connection->prepare(query: $query);
         try {
-            return $this->connection->query($query)->fetch(mode: PDO::FETCH_NAMED);
+            $state->bindValue(param: "id",value: $id,type: PDO::PARAM_INT);
+            $state->execute();
+            return $state->fetch(mode: PDO::FETCH_NAMED);
         }
         catch(PDOException $ex){
             return $ex;

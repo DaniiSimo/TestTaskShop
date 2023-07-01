@@ -39,6 +39,7 @@ class Product extends Table
             "description text NOT NULL,".
             "price FLOAT NOT NULL,".
             "path_image VARCHAR(1000) NOT NULL,".
+            "UNIQUE KEY (name),".
             "PRIMARY KEY (id))".
             "ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;";
         return $this->connection->exec(statement: $query);
@@ -53,9 +54,9 @@ class Product extends Table
      *  "price" => {Значение цены товара} float
      *  "path_image" => {Значение пути до изображения товара} string
      * ]
-     * @return bool|PDOException Если, товар успешно добавлен, возвращает true, иначе ошибку
+     * @return array|PDOException Если, товар успешно добавлен, возвращается массив с добавленным товаром, обращаться к нему по полю added_product, иначе ошибку
      */
-    public function addRecord(array $params): bool|PDOException
+    public function addRecord(array $params): array|PDOException
     {
         $query = "INSERT INTO $this->name SET name =:name, description=:description, price=:price, path_image=:path_image";
         $state = $this->connection->prepare(query: $query);
@@ -65,7 +66,15 @@ class Product extends Table
             $state->bindValue(param: "price",value: $params["price"],type: PDO::PARAM_STR);
             $state->bindValue(param: "path_image",value: $params["path_image"],type: PDO::PARAM_STR);
             $state->execute();
-            return true;
+            return [
+                "added_product" => [
+                    "id" => $this->connection->lastInsertId(),
+                    "name" => $params["name"],
+                    "description" => $params["description"],
+                    "price" => $params["price"],
+                    "path_image" => $params["path_image"]
+                ]
+            ];
         }
         catch(PDOException $ex){
             return $ex;
@@ -82,9 +91,9 @@ class Product extends Table
      *  "price" => {Значение цены товара} float
      *  "path_image" => {Значение пути до изображения товара} string
      * ]
-     * @return bool|PDOException Если, товар успешно редактирован, возвращает true, иначе ошибку
+     * @return array|PDOException Если, товар успешно редактирован, возвращается массив с редактированным товаром, обращаться к нему по полю edited_product, иначе ошибку
      */
-    public function editRecord(int $id, array $params): bool|PDOException
+    public function editRecord(int $id, array $params): array|PDOException
     {
         $query = "UPDATE $this->name SET name = :name, description = :description, price = :price, path_image = :path_image WHERE `id` = :id";
         $state = $this->connection->prepare(query: $query);
@@ -95,7 +104,18 @@ class Product extends Table
             $state->bindValue(param: "path_image",value: $params["path_image"],type: PDO::PARAM_STR);
             $state->bindValue(param: "id",value: $id,type: PDO::PARAM_INT);
             $state->execute();
-            return true;
+            if($state->rowCount() == 0){
+                throw new PDOException(message: "There is no product with this id");
+            }
+            return [
+                "edited_product" => [
+                    "id" => $id,
+                    "name" => $params["name"],
+                    "description" => $params["description"],
+                    "price" => $params["price"],
+                    "path_image" => $params["path_image"]
+                ]
+            ];
         }
         catch(PDOException $ex){
             return $ex;
@@ -105,16 +125,23 @@ class Product extends Table
      * Удаление товара из базы данных
      *
      * @param int $id Идентификатор, удаляемого товара
-     * @return bool|PDOException Если, товар успешно удалён, возвращает true, иначе ошибку
+     * @return array|PDOException Если, товар успешно удалён, возвращается массив с удалённым товаром, обращаться к нему по полю deleted_product, иначе ошибку
      */
-    public function deleteRecord(int $id): bool|PDOException
+    public function deleteRecord(int $id): array|PDOException
     {
         $query = "DELETE FROM $this->name WHERE id=:id";
         $state = $this->connection->prepare(query: $query);
         try {
             $state->bindValue(param: "id",value: $id,type: PDO::PARAM_INT);
             $state->execute();
-            return true;
+            if($state->rowCount() == 0){
+                throw new PDOException(message: "There is no product with this id");
+            }
+            return [
+                "deleted_product" => [
+                    "id" => $id
+                ]
+            ];
         }
         catch(PDOException $ex){
             return $ex;
@@ -123,7 +150,7 @@ class Product extends Table
     /**
      * Получение всех товаров из базы данных
      *
-     * @return array|PDOException Если, получение произошло успешно, возвращает массив всех товаров, иначе ошибку
+     * @return array|PDOException Если, получение произошло успешно, возвращает массив всех товаров, если товаров не существует, возвращает пустой массив, иначе ошибку
      */
     public function getAllRecords(): array|PDOException
     {
@@ -139,13 +166,16 @@ class Product extends Table
      * Получение товара по идентификатору из базы данных
      *
      * @param int $id Идентификатор, получаемого товара
-     * @return array|PDOException Если, получение произошло успешно, возвращает товар из базы данных, иначе ошибку
+     * @return array|PDOException|bool Если, получение произошло успешно, возвращает товар из базы данных, если товара с указанным id не существует, возвращает false, иначе ошибку
      */
-    public function getRecord(int $id): array|PDOException
+    public function getRecordById(int $id): array|PDOException|bool
     {
-        $query = "SELECT * FROM $this->name WHERE id=$id";
+        $query = "SELECT * FROM $this->name WHERE id=:id";
+        $state = $this->connection->prepare(query: $query);
         try {
-            return $this->connection->query($query)->fetch(mode: PDO::FETCH_NAMED);
+            $state->bindValue(param: "id",value: $id,type: PDO::PARAM_INT);
+            $state->execute();
+            return $state->fetch(mode: PDO::FETCH_NAMED);
         }
         catch(PDOException $ex){
             return $ex;

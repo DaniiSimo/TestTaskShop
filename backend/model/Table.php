@@ -38,37 +38,37 @@ abstract class Table
      * Добавление записи в таблицу
      *
      * @param array $params Ассоциативный массив со значениями столбцов таблицы
-     * @return bool|PDOException Если, запись успешно добавлена, возвращает true, иначе ошибку
+     * @return array|PDOException Если, запись успешно добавлена, возвращает добавленную запись, иначе ошибку
      */
-    abstract public function addRecord(array $params):bool|PDOException;
+    abstract public function addRecord(array $params):array|PDOException;
     /**
      * Редактирование записи таблицы
      *
      * @param int $id Идентификатор, редактируемой записи
      * @param array $params Ассоциативный массив со значениями столбцов таблицы
-     * @return bool|PDOException Если, запись успешно добавлена, возвращает true, иначе ошибку
+     * @return array|PDOException Если, запись успешно редактирована, возвращает редактированную запись, иначе ошибку
      */
-    abstract public function editRecord(int $id,array $params ):bool|PDOException;
+    abstract public function editRecord(int $id,array $params ):array|PDOException;
     /**
      * Удаление записи таблицы
      *
      * @param int $id Идентификатор, удаляемой записи
-     * @return bool|PDOException Если, запись успешно добавлена, возвращает true, иначе ошибку
+     * @return array|PDOException Если, запись успешно добавлена, возвращает удалённую запись, иначе ошибку
      */
-    abstract public function deleteRecord(int $id):bool|PDOException;
+    abstract public function deleteRecord(int $id):array|PDOException;
     /**
      * Получение всех записей таблицы
      *
-     * @return array|PDOException Если, получение произошло успешно, возвращает массив всех записей таблицы, иначе ошибку
+     * @return array|PDOException Если, получение произошло успешно, возвращает массив всех записей таблицы, если записей не существует, возвращает пустой массив, иначе ошибку
      */
     abstract public function getAllRecords():array|PDOException;
     /**
      * Получение записи из таблицы
      *
      * @param int $id Идентификатор, получаемой записи
-     * @return array|PDOException Если, получение произошло успешно, возвращает запись таблицы, иначе ошибку
+     * @return array|PDOException|bool Если, получение произошло успешно, возвращает запись таблицы,если записи с указанным идентификатором не существует, возвращается false, иначе ошибку
      */
-    abstract public function getRecord(int $id):array|PDOException;
+    abstract public function getRecordById(int $id):array|PDOException|bool;
     /**
      * Проверка существования таблицы в базе данных
      *
