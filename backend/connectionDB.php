@@ -4,3 +4,4 @@ const PORT = 8080;
 const USER = "root";
 const PASSWORD = "123";
 const DBNAME = "testTask";
+const PROTOCOL = "http";

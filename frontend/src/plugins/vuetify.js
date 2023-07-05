@@ -1,10 +1,19 @@
 // Styles
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
-
-// Vuetify
 import { createVuetify } from 'vuetify'
 
-export default createVuetify(
-  // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
-)
+export default createVuetify({
+    thresholds: {
+        xs: 0,
+        sm: 340,
+        md: 540,
+        lg: 800,
+        xl: 1280,
+    },
+    icons: {
+        defaultSet: 'mdi',
+    },
+})
+
+

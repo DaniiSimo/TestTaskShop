@@ -35,6 +35,16 @@ if($resultGetAllRecords instanceof PDOException || count($resultGetAllRecords) =
     require_once("addProduct.php");
 }
 /**
+ * Добавление заголовков CORS
+ */
+$app->add(function ($req, $res, $next) {
+    $response = $next($req, $res);
+    return $response
+            ->withHeader('Access-Control-Allow-Origin', ' http://localhost:8081')
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+});
+/**
  * Путь для просмотра товаров
  */
 $app->get(pattern: '/products',callable: function (Request $request, Response $response) {
@@ -45,9 +55,7 @@ $app->get(pattern: '/products',callable: function (Request $request, Response $r
         $response->withStatus(code: 500)
             ->withHeader(name: 'Content-Type', value: 'application/json')
             ->write(data: json_encode([
-                "data" => [
-                    "message" => $resultGetAllRecords->getMessage()
-                ]
+                "message" => $resultGetAllRecords->getMessage()
             ]));
         return $response;
     }
@@ -55,13 +63,11 @@ $app->get(pattern: '/products',callable: function (Request $request, Response $r
         $response->withStatus(code: 500)
             ->withHeader(name: 'Content-Type', value: 'application/json')
             ->write(data: json_encode([
-                "data" => [
-                    "message" => "There are no entries in the bucket"
-                ]
+                "message" => "There are no entries in the bucket"
             ]));
         return $response;
     }
-    $productsJson = json_encode(["data" => $resultGetAllRecords]);
+    $productsJson = json_encode($resultGetAllRecords);
     $response->withStatus(code: 200)
         ->withHeader(name: 'Content-Type', value: 'application/json')
         ->write(data: $productsJson);
@@ -78,9 +84,7 @@ $app->get(pattern: '/basket',callable: function (Request $request, Response $res
         $response->withStatus(code: 500)
             ->withHeader(name: 'Content-Type', value: 'application/json')
             ->write(data: json_encode([
-                "data" => [
-                    "message" => $resultGetAllRecords->getMessage()
-                ]
+                "message" => $resultGetAllRecords->getMessage()
             ]));
         return $response;
     }
@@ -88,13 +92,11 @@ $app->get(pattern: '/basket',callable: function (Request $request, Response $res
         $response->withStatus(code: 500)
             ->withHeader(name: 'Content-Type', value: 'application/json')
             ->write(data: json_encode([
-                "data" => [
-                    "message" => "There are no entries in the bucket"
-                ]
+                "message" => "There are no entries in the bucket"
             ]));
         return $response;
     }
-    $basketJson = json_encode(["data" => $resultGetAllRecords]);
+    $basketJson = json_encode($resultGetAllRecords);
     $response->withStatus(code: 200)
         ->withHeader(name: 'Content-Type', value: 'application/json')
         ->write(data: $basketJson);
@@ -109,9 +111,7 @@ $app->post(pattern: '/basket/add',callable: function (Request $request, Response
         $response->withStatus(code: 400)
             ->withHeader(name: 'Content-Type', value: 'application/json')
             ->write(data: json_encode([
-                "data" => [
-                    "message" => "No input parameters were specified"
-                ]
+                "message" => "No input parameters were specified"
             ]));
         return $response;
     }
@@ -122,26 +122,20 @@ $app->post(pattern: '/basket/add',callable: function (Request $request, Response
         $response->withStatus(code: 400)
             ->withHeader(name: 'Content-Type', value: 'application/json')
             ->write(data: json_encode([
-                "data" => [
-                    "message" => "To add to the cart, you must specify the product_id parameter"
-                ]
+                "message" => "To add to the cart, you must specify the product_id parameter"
             ]));
     }
     if($resultAdd instanceof PDOException){
         $response->withStatus(code: 500)
             ->withHeader(name: 'Content-Type', value: 'application/json')
             ->write(data: json_encode([
-                "data" => [
-                    "message" => $resultAdd->getMessage()
-                ]
+                "message" => $resultAdd->getMessage()
             ]));
         return $response;
     }
     $response->withStatus(code: 200)
         ->withHeader(name: 'Content-Type', value: 'application/json')
-        ->write(data: json_encode([
-            "data" => $resultAdd
-        ]));
+        ->write(data: json_encode($resultAdd));
     return $response;
 });
 /**
@@ -153,9 +147,7 @@ $app->delete(pattern: '/basket/delete/{id}',callable: function (Request $request
         $response->withStatus(code: 400)
             ->withHeader(name: 'Content-Type', value: 'application/json')
             ->write(data: json_encode([
-                "data" => [
-                    "message" => "Id is specified incorrectly"
-                ]
+                "message" => "Id is specified incorrectly"
             ]));
         return $response;
     }
@@ -166,17 +158,13 @@ $app->delete(pattern: '/basket/delete/{id}',callable: function (Request $request
         $response->withStatus(code: 400)
             ->withHeader(name: 'Content-Type', value: 'application/json')
             ->write(data: json_encode([
-                "data" => [
-                    "message" => $resultDelete->getMessage()
-                ]
+                "message" => $resultDelete->getMessage()
             ]));
         return $response;
     }
     $response->withStatus(code: 200)
         ->withHeader(name: 'Content-Type', value: 'application/json')
-        ->write(data: json_encode([
-            "data" => $resultDelete
-        ]));
+        ->write(data: json_encode($resultDelete));
     return $response;
 });
 

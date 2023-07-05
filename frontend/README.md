@@ -1,24 +1,14 @@
 # frontend
-
-## Project setup
+Для перехода в эту директорию из корневой директории проекта используйте команду(Windows):
+```
+cd ./frontend
+```
+## Команда для установки всех, необходимых компонентов
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### Запуск сервера
 ```
 npm run serve
 ```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
